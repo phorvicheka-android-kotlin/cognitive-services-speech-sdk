@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.microsoft.cognitiveservices.speech.samples.sdkdemo">
+    package="com.microsoft.cognitiveservices.speech.samples.sdkdemoSTT">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -13,13 +13,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name="com.microsoft.cognitiveservices.speech.samples.sdkdemo.SpeechTranslationActivity">
+        <!--<activity android:name="com.microsoft.cognitiveservices.speech.samples.sdkdemo.SpeechTranslationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
             </intent-filter>
-        </activity>
-        <activity android:name="com.microsoft.cognitiveservices.speech.samples.sdkdemo.MainActivity">
+        </activity>-->
+        <activity android:name="com.microsoft.cognitiveservices.speech.samples.sdkdemoSTT.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

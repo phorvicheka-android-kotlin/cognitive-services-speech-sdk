@@ -1,4 +1,4 @@
-package com.microsoft.cognitiveservices.speech.samples.sdkdemo;
+package com.microsoft.cognitiveservices.speech.samples.sdkdemoSTT;
 
 public class TranslateLocale {
     private String fromLanguage;

@@ -29,9 +29,9 @@ import static android.Manifest.permission.*;
 public class MainActivity extends AppCompatActivity {
 
     // Replace below with your own subscription key
-    private static String speechSubscriptionKey = "YourSubscriptionKey";
+    private static String speechSubscriptionKey = "5cbb2b6a9e97434daa971cbd769e5175";
     // Replace below with your own service region (e.g., "westus").
-    private static String serviceRegion = "YourServiceRegion";
+    private static String serviceRegion = "koreacentral";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +54,10 @@ public class MainActivity extends AppCompatActivity {
             PullAudioInputStream pullAudio = AudioInputStream.createPullStream(new BinaryAudioStreamReader(path),
                 AudioStreamFormat.getCompressedFormat(AudioStreamContainerFormat.MP3));
             AudioConfig ac = AudioConfig.fromStreamInput(pullAudio);
+
+            // https://github.com/Azure-Samples/cognitive-services-speech-sdk/issues/270
+            /*String path = Environment.getExternalStorageDirectory() + "/input/whatstheweatherlike.wav";
+            AudioConfig ac = AudioConfig.fromWavFileInput(path);*/
 
             SpeechRecognizer reco = new SpeechRecognizer(config, ac);
             assert(reco != null);

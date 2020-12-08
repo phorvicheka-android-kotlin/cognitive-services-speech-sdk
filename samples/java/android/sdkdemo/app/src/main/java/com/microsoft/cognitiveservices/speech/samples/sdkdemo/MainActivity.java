@@ -4,33 +4,38 @@
 //
 package com.microsoft.cognitiveservices.speech.samples.sdkdemo;
 
+import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.microsoft.cognitiveservices.speech.audio.AudioConfig;
+import com.microsoft.cognitiveservices.speech.AutoDetectSourceLanguageConfig;
+import com.microsoft.cognitiveservices.speech.CancellationDetails;
+import com.microsoft.cognitiveservices.speech.CancellationReason;
+import com.microsoft.cognitiveservices.speech.KeywordRecognitionModel;
 import com.microsoft.cognitiveservices.speech.ResultReason;
-import com.microsoft.cognitiveservices.speech.intent.LanguageUnderstandingModel;
+import com.microsoft.cognitiveservices.speech.SourceLanguageConfig;
 import com.microsoft.cognitiveservices.speech.SpeechConfig;
-import com.microsoft.cognitiveservices.speech.intent.IntentRecognitionResult;
-import com.microsoft.cognitiveservices.speech.intent.IntentRecognizer;
 import com.microsoft.cognitiveservices.speech.SpeechRecognitionResult;
 import com.microsoft.cognitiveservices.speech.SpeechRecognizer;
-import com.microsoft.cognitiveservices.speech.samples.sdkdemo.MicrophoneStream;
-import com.microsoft.cognitiveservices.speech.CancellationDetails;
-import com.microsoft.cognitiveservices.speech.KeywordRecognitionModel;
+import com.microsoft.cognitiveservices.speech.audio.AudioConfig;
+import com.microsoft.cognitiveservices.speech.intent.IntentRecognitionResult;
+import com.microsoft.cognitiveservices.speech.intent.IntentRecognizer;
+import com.microsoft.cognitiveservices.speech.intent.LanguageUnderstandingModel;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -39,16 +44,22 @@ import static android.Manifest.permission.INTERNET;
 import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 import static android.Manifest.permission.RECORD_AUDIO;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
     //
     // Configuration for speech recognition
     //
 
     // Replace below with your own subscription key
-    private static final String SpeechSubscriptionKey = "YourSubscriptionKey";
+    private static final String SpeechSubscriptionKey = "5cbb2b6a9e97434daa971cbd769e5175";
     // Replace below with your own service region (e.g., "westus").
-    private static final String SpeechRegion = "YourServiceRegion";
+    private static final String SpeechRegion = "koreacentral";
+
+    private static String[] SUPPORTED_LANGUAGES = {"en-US", "ko-KR", "es-ES", "ru-RU"};
+    private SpeechConfig speechConfig;
+    private KeywordRecognitionModel kwsModel;
+    private AutoDetectSourceLanguageConfig autoDetectSourceLanguageConfig;
+    private SourceLanguageConfig sourceLanguageConfig;
 
     //
     // Configuration for intent recognition
@@ -73,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
     private Button recognizeWithKeywordButton;
 
     private MicrophoneStream microphoneStream;
+
     private MicrophoneStream createMicrophoneStream() {
         if (microphoneStream != null) {
             microphoneStream.close();
@@ -86,6 +98,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.i(this.getClass().getName(), ">>>>>>>>> onCreate");
         setContentView(R.layout.activity_main);
 
         recognizedTextView = findViewById(R.id.recognizedText);
@@ -104,16 +117,20 @@ public class MainActivity extends AppCompatActivity {
 
             // Request permissions needed for speech recognition
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{RECORD_AUDIO, INTERNET, READ_EXTERNAL_STORAGE}, permissionRequestId);
-        }
-        catch(Exception ex) {
+        } catch (Exception ex) {
             Log.e("SpeechSDK", "could not init sdk, " + ex.toString());
             recognizedTextView.setText("Could not initialize: " + ex.toString());
         }
 
         // create config
-        final SpeechConfig speechConfig;
+        /*final SpeechConfig speechConfig;
         final KeywordRecognitionModel kwsModel;
+        final AutoDetectSourceLanguageConfig autoDetectSourceLanguageConfig;
+        final SourceLanguageConfig sourceLanguageConfig;*/
         try {
+            autoDetectSourceLanguageConfig =
+                    AutoDetectSourceLanguageConfig.fromLanguages(Arrays.asList("en-US", "ko-KR", "es-ES", "ru-RU"));
+            sourceLanguageConfig = SourceLanguageConfig.fromLanguage("ko-KR");
             speechConfig = SpeechConfig.fromSubscription(SpeechSubscriptionKey, SpeechRegion);
             kwsModel = KeywordRecognitionModel.fromFile(copyAssetToCacheAndGetFilePath(KwsModelFile));
         } catch (Exception ex) {
@@ -121,6 +138,13 @@ public class MainActivity extends AppCompatActivity {
             displayException(ex);
             return;
         }
+
+        // https://www.tutlane.com/tutorial/android/android-spinner-dropdown-list-with-examples
+        Spinner spin = (Spinner) findViewById(R.id.spinner1);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, SUPPORTED_LANGUAGES);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spin.setAdapter(adapter);
+        spin.setOnItemSelectedListener(this);
 
         ///////////////////////////////////////////////////
         // recognize
@@ -134,7 +158,9 @@ public class MainActivity extends AppCompatActivity {
             try {
                 // final AudioConfig audioInput = AudioConfig.fromDefaultMicrophoneInput();
                 final AudioConfig audioInput = AudioConfig.fromStreamInput(createMicrophoneStream());
-                final SpeechRecognizer reco = new SpeechRecognizer(speechConfig, audioInput);
+                //final SpeechRecognizer reco = new SpeechRecognizer(speechConfig, audioInput);
+                //final SpeechRecognizer reco = new SpeechRecognizer(speechConfig, autoDetectSourceLanguageConfig, audioInput);
+                final SpeechRecognizer reco = new SpeechRecognizer(speechConfig, sourceLanguageConfig, audioInput);
 
                 final Future<SpeechRecognitionResult> task = reco.recognizeOnceAsync();
                 setOnTaskCompletedListener(task, result -> {
@@ -167,7 +193,8 @@ public class MainActivity extends AppCompatActivity {
             try {
                 // final AudioConfig audioInput = AudioConfig.fromDefaultMicrophoneInput();
                 final AudioConfig audioInput = AudioConfig.fromStreamInput(createMicrophoneStream());
-                final SpeechRecognizer reco = new SpeechRecognizer(speechConfig, audioInput);
+                //final SpeechRecognizer reco = new SpeechRecognizer(speechConfig, audioInput);
+                final SpeechRecognizer reco = new SpeechRecognizer(speechConfig, sourceLanguageConfig, audioInput);
 
                 reco.recognizing.addEventListener((o, speechRecognitionResultEventArgs) -> {
                     final String s = speechRecognitionResultEventArgs.getResult().getText();
@@ -229,7 +256,8 @@ public class MainActivity extends AppCompatActivity {
 
                     // audioInput = AudioConfig.fromDefaultMicrophoneInput();
                     audioInput = AudioConfig.fromStreamInput(createMicrophoneStream());
-                    reco = new SpeechRecognizer(speechConfig, audioInput);
+                    //reco = new SpeechRecognizer(speechConfig, audioInput);
+                    reco = new SpeechRecognizer(speechConfig, sourceLanguageConfig, audioInput);
 
                     reco.recognizing.addEventListener((o, speechRecognitionResultEventArgs) -> {
                         final String s = speechRecognitionResultEventArgs.getResult().getText();
@@ -299,6 +327,14 @@ public class MainActivity extends AppCompatActivity {
                     if (result.getReason() != ResultReason.RecognizedIntent) {
                         String errorDetails = (result.getReason() == ResultReason.Canceled) ? CancellationDetails.fromResult(result).getErrorDetails() : "";
                         s = "Intent failed with " + result.getReason() + ". Did you enter your Language Understanding subscription?" + System.lineSeparator() + errorDetails;
+                        CancellationDetails cancellation = CancellationDetails.fromResult(result);
+                        System.out.println("CANCELED: Reason=" + cancellation.getReason());
+
+                        if (cancellation.getReason() == CancellationReason.Error) {
+                            System.out.println("CANCELED: ErrorCode=" + cancellation.getErrorCode());
+                            System.out.println("CANCELED: ErrorDetails=" + cancellation.getErrorDetails());
+                            System.out.println("CANCELED: Did you update the subscription info?");
+                        }
                     }
 
                     String intentId = result.getIntentId();
@@ -366,13 +402,10 @@ public class MainActivity extends AppCompatActivity {
 
                     reco.recognized.addEventListener((o, speechRecognitionResultEventArgs) -> {
                         final String s;
-                        if (speechRecognitionResultEventArgs.getResult().getReason() == ResultReason.RecognizedKeyword)
-                        {
+                        if (speechRecognitionResultEventArgs.getResult().getReason() == ResultReason.RecognizedKeyword) {
                             s = "Keyword: " + speechRecognitionResultEventArgs.getResult().getText();
                             Log.i(logTag, "Keyword recognized result received: " + s);
-                        }
-                        else
-                        {
+                        } else {
                             s = "Recognized: " + speechRecognitionResultEventArgs.getResult().getText();
                             Log.i(logTag, "Final result received: " + s);
                         }
@@ -464,8 +497,7 @@ public class MainActivity extends AppCompatActivity {
                 FileOutputStream fos = new FileOutputStream(cacheFile);
                 fos.write(buffer);
                 fos.close();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
@@ -473,7 +505,54 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private static ExecutorService s_executorService;
+
     static {
         s_executorService = Executors.newCachedThreadPool();
     }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Log.i(this.getClass().getName(), ">>>>>>>>> onStart");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.i(this.getClass().getName(), ">>>>>>>>> onStop");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.i(this.getClass().getName(), ">>>>>>>>> onPause");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.i(this.getClass().getName(), ">>>>>>>>> onResume");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.i(this.getClass().getName(), ">>>>>>>>> onDestroy");
+        this.speechConfig.close();
+        this.sourceLanguageConfig.close();
+        this.autoDetectSourceLanguageConfig.close();
+    }
+
+
+    @Override
+    public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
+        Toast.makeText(getApplicationContext(), "Selected Language: "+ SUPPORTED_LANGUAGES[position] ,Toast.LENGTH_SHORT).show();
+        this.sourceLanguageConfig = SourceLanguageConfig.fromLanguage(SUPPORTED_LANGUAGES[position]);
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> adapterView) {
+
+    }
+
 }

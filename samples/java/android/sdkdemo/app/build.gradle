@@ -1,6 +1,9 @@
 apply plugin: 'com.android.application'
 
 android {
+    def SPEECH__SUBSCRIPTION__KEY = System.getenv("SPEECH__SUBSCRIPTION__KEY")
+    def SPEECH__SERVICE__REGION = System.getenv("SPEECH__SERVICE__REGION")
+
     compileSdkVersion 27
     defaultConfig {
         applicationId "com.microsoft.cognitiveservices.speech.samples.sdkdemo"
@@ -8,6 +11,9 @@ android {
         targetSdkVersion 27
         versionCode 1
         versionName "1.0"
+        // https://appcircle.io/blog/how-to-use-environment-variables-in-android-applications-with-gradle/
+        buildConfigField "String", "SPEECH__SUBSCRIPTION__KEY", "\"${SPEECH__SUBSCRIPTION__KEY}\""
+        buildConfigField "String", "SPEECH__SERVICE__REGION", "\"${SPEECH__SERVICE__REGION}\""
     }
     buildTypes {
         release {

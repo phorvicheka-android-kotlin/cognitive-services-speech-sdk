@@ -52,9 +52,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     //
 
     // Replace below with your own subscription key
-    private static final String SpeechSubscriptionKey = "5cbb2b6a9e97434daa971cbd769e5175";
+    private static String SpeechSubscriptionKey = "get from environment variable: SPEECH__SUBSCRIPTION__KEY";
     // Replace below with your own service region (e.g., "westus").
-    private static final String SpeechRegion = "koreacentral";
+    private static String SpeechRegion = "get from environment variable: SPEECH__SERVICE__REGION";
 
     private ArrayList<String> supportedLanguages = new ArrayList<>();
     private HashMap<String ,String> languageLocaleMap = new HashMap<>();
@@ -130,6 +130,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         final AutoDetectSourceLanguageConfig autoDetectSourceLanguageConfig;
         final SourceLanguageConfig sourceLanguageConfig;*/
         try {
+            SpeechSubscriptionKey = BuildConfig.SPEECH__SUBSCRIPTION__KEY;
+            SpeechRegion = BuildConfig.SPEECH__SERVICE__REGION;
+            Log.i(this.getClass().getName(), "------------------- Environment variables -----------------------");
+            Log.i(this.getClass().getName(), "SPEECH__SUBSCRIPTION__KEY: " + BuildConfig.SPEECH__SUBSCRIPTION__KEY);
+            Log.i(this.getClass().getName(), "SPEECH__SERVICE__REGION: " + BuildConfig.SPEECH__SERVICE__REGION);
             autoDetectSourceLanguageConfig =
                     AutoDetectSourceLanguageConfig.fromLanguages(Arrays.asList("en-US", "ko-KR", "es-ES", "ru-RU"));
             sourceLanguageConfig = SourceLanguageConfig.fromLanguage("ko-KR");

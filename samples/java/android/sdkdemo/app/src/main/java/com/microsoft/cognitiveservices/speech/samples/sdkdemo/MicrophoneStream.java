@@ -7,10 +7,9 @@ package com.microsoft.cognitiveservices.speech.samples.sdkdemo;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
-import android.util.Log;
 
-import com.microsoft.cognitiveservices.speech.audio.PullAudioInputStreamCallback;
 import com.microsoft.cognitiveservices.speech.audio.AudioStreamFormat;
+import com.microsoft.cognitiveservices.speech.audio.PullAudioInputStreamCallback;
 
 /**
  * MicrophoneStream exposes the Android Microphone as an PullAudioInputStreamCallback

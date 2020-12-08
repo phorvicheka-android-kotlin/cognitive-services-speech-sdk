@@ -125,11 +125,21 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }
 
         // create config
-        /*final SpeechConfig speechConfig;
-        final KeywordRecognitionModel kwsModel;
-        final AutoDetectSourceLanguageConfig autoDetectSourceLanguageConfig;
-        final SourceLanguageConfig sourceLanguageConfig;*/
         try {
+            // https://stackoverflow.com/questions/3013655/creating-hashmap-map-from-xml-resources
+            String[] stringArray = getResources().getStringArray(R.array.languageLocaleMap);
+            for (String entry : stringArray) {
+                String[] splitResult = entry.split("\\|", 2);
+                languageLocaleMap.put(splitResult[0], splitResult[1]);
+                supportedLanguages.add(splitResult[0]);
+            }
+            // https://www.tutlane.com/tutorial/android/android-spinner-dropdown-list-with-examples
+            Spinner spin = (Spinner) findViewById(R.id.spinnerSelectLanguage);
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, supportedLanguages);
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            spin.setAdapter(adapter);
+            spin.setOnItemSelectedListener(this);
+
             SpeechSubscriptionKey = BuildConfig.SPEECH__SUBSCRIPTION__KEY;
             SpeechRegion = BuildConfig.SPEECH__SERVICE__REGION;
             Log.i(this.getClass().getName(), "------------------- Environment variables -----------------------");
@@ -137,7 +147,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             Log.i(this.getClass().getName(), "SPEECH__SERVICE__REGION: " + BuildConfig.SPEECH__SERVICE__REGION);
             autoDetectSourceLanguageConfig =
                     AutoDetectSourceLanguageConfig.fromLanguages(Arrays.asList("en-US", "ko-KR", "es-ES", "ru-RU"));
-            sourceLanguageConfig = SourceLanguageConfig.fromLanguage("ko-KR");
             speechConfig = SpeechConfig.fromSubscription(SpeechSubscriptionKey, SpeechRegion);
             kwsModel = KeywordRecognitionModel.fromFile(copyAssetToCacheAndGetFilePath(KwsModelFile));
         } catch (Exception ex) {
@@ -146,19 +155,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             return;
         }
 
-        // https://stackoverflow.com/questions/3013655/creating-hashmap-map-from-xml-resources
-        String[] stringArray = getResources().getStringArray(R.array.languageLocaleMap);
-        for (String entry : stringArray) {
-            String[] splitResult = entry.split("\\|", 2);
-            languageLocaleMap.put(splitResult[0], splitResult[1]);
-            supportedLanguages.add(splitResult[0]);
-        }
-        // https://www.tutlane.com/tutorial/android/android-spinner-dropdown-list-with-examples
-        Spinner spin = (Spinner) findViewById(R.id.spinnerSelectLanguage);
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, supportedLanguages);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spin.setAdapter(adapter);
-        spin.setOnItemSelectedListener(this);
 
         ///////////////////////////////////////////////////
         // recognize

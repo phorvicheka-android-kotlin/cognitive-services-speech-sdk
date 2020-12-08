@@ -36,6 +36,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -55,7 +56,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     // Replace below with your own service region (e.g., "westus").
     private static final String SpeechRegion = "koreacentral";
 
-    private static String[] SUPPORTED_LANGUAGES = {"en-US", "ko-KR", "es-ES", "ru-RU"};
+    private ArrayList<String> supportedLanguages = new ArrayList<>();
+    private HashMap<String ,String> languageLocaleMap = new HashMap<>();
     private SpeechConfig speechConfig;
     private KeywordRecognitionModel kwsModel;
     private AutoDetectSourceLanguageConfig autoDetectSourceLanguageConfig;
@@ -139,9 +141,16 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             return;
         }
 
+        // https://stackoverflow.com/questions/3013655/creating-hashmap-map-from-xml-resources
+        String[] stringArray = getResources().getStringArray(R.array.languageLocaleMap);
+        for (String entry : stringArray) {
+            String[] splitResult = entry.split("\\|", 2);
+            languageLocaleMap.put(splitResult[0], splitResult[1]);
+            supportedLanguages.add(splitResult[0]);
+        }
         // https://www.tutlane.com/tutorial/android/android-spinner-dropdown-list-with-examples
-        Spinner spin = (Spinner) findViewById(R.id.spinner1);
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, SUPPORTED_LANGUAGES);
+        Spinner spin = (Spinner) findViewById(R.id.spinnerSelectLanguage);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, supportedLanguages);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spin.setAdapter(adapter);
         spin.setOnItemSelectedListener(this);
@@ -546,8 +555,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     @Override
     public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
-        Toast.makeText(getApplicationContext(), "Selected Language: "+ SUPPORTED_LANGUAGES[position] ,Toast.LENGTH_SHORT).show();
-        this.sourceLanguageConfig = SourceLanguageConfig.fromLanguage(SUPPORTED_LANGUAGES[position]);
+        // https://stackoverflow.com/questions/35449800/best-practice-to-implement-key-value-pair-in-android-spinner/35450251
+        String language = supportedLanguages.get(position);
+        String locale = languageLocaleMap.get(language);
+        Toast.makeText(getApplicationContext(), "Selected Language: "+ language + "\n Locale: " + locale,Toast.LENGTH_SHORT).show();
+        this.sourceLanguageConfig = SourceLanguageConfig.fromLanguage(locale);
     }
 
     @Override

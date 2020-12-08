@@ -10,7 +10,7 @@
       android:id="@+id/txtVw"
       android:layout_width="0dp"
       android:layout_height="18dp"
-      android:layout_marginStart="32dp"
+      android:layout_marginStart="8dp"
       android:layout_marginTop="32dp"
       android:text="Select Language:"
       android:textSize="14sp"
@@ -19,14 +19,15 @@
       app:layout_constraintTop_toTopOf="parent" />
 
   <Spinner
-      android:id="@+id/spinner1"
+      android:id="@+id/spinnerSelectLanguage"
       android:layout_width="0dp"
       android:layout_height="wrap_content"
       android:layout_marginStart="8dp"
+      android:layout_marginEnd="8dp"
       app:layout_constraintBottom_toBottomOf="@+id/txtVw"
+      app:layout_constraintEnd_toEndOf="parent"
       app:layout_constraintStart_toEndOf="@+id/txtVw"
-      app:layout_constraintTop_toTopOf="@+id/txtVw"
-      app:layout_constraintVertical_bias="0.0" />
+      app:layout_constraintTop_toTopOf="@+id/txtVw" />
 
   <Button
       android:id="@+id/buttonRecognize"
@@ -38,7 +39,7 @@
       app:layout_constraintEnd_toEndOf="@+id/buttonRecognizeIntermediate"
       app:layout_constraintHorizontal_bias="1.0"
       app:layout_constraintStart_toStartOf="@+id/buttonRecognizeIntermediate"
-      app:layout_constraintTop_toBottomOf="@+id/spinner1" />
+      app:layout_constraintTop_toBottomOf="@+id/spinnerSelectLanguage" />
 
   <Button
       android:id="@+id/buttonRecognizeIntermediate"

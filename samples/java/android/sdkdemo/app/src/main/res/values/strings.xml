@@ -1,4 +1,11 @@
 <resources>
     <string name="app_name">SpeechSDKQuickstart</string>
     <string name="speechButtonText">Recognize Speech</string>
+
+    <string-array name="languageLocaleMap">
+        <item>Korean (Korea)|ko-KR</item>
+        <item>English (United States)|en-US</item>
+        <item>Spanish (Spain)|es-ES</item>
+        <item>Russian (Russia)|ru-RU</item>
+    </string-array>
 </resources>

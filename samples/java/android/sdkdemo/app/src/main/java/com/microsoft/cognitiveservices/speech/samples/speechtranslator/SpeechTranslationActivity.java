@@ -1,4 +1,4 @@
-package com.microsoft.cognitiveservices.speech.samples.sdkdemo;
+package com.microsoft.cognitiveservices.speech.samples.speechtranslator;
 
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;

@@ -1,7 +1,7 @@
 <resources>
     <!--<string name="app_name">SpeechSDKQuickstart</string>-->
-    <string name="app_name">SpeechSdkDemo</string>
-    <!--<string name="app_name">SpeechTranslator</string>-->
+    <!--<string name="app_name">SpeechSdkDemo</string>-->
+    <string name="app_name">SpeechTranslator</string>
     <string name="speechTranslation">Speech Translation</string>
     <string name="speechButtonText">Recognize Speech</string>
 

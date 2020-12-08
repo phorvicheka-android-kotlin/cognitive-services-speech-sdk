@@ -147,7 +147,7 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
                     String translatedText = "";
                     for (Map.Entry<String, String> pair : result.getTranslations().entrySet()) {
                         System.out.printf("Translated into '%s': %s\n", pair.getKey(), pair.getValue());
-                        if(toLanguage.contains(pair.getKey())){
+                        if(toLanguage.equals(pair.getKey())){
                             translatedText = pair.getValue();
                         }
                     }
@@ -190,7 +190,7 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
                     String translatedText = "";
                     for (Map.Entry<String, String> pair : speechRecognitionResultEventArgs.getResult().getTranslations().entrySet()) {
                         System.out.printf("Translated into '%s': %s\n", pair.getKey(), pair.getValue());
-                        if(toLanguage.contains(pair.getKey())){
+                        if(toLanguage.equals(pair.getKey())){
                             translatedText = pair.getValue();
                         }
                     }
@@ -207,7 +207,7 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
                     String translatedText = "";
                     for (Map.Entry<String, String> pair : result.getTranslations().entrySet()) {
                         System.out.printf("Translated into '%s': %s\n", pair.getKey(), pair.getValue());
-                        if(toLanguage.contains(pair.getKey())){
+                        if(toLanguage.equals(pair.getKey())){
                             translatedText = pair.getValue();
                         }
                     }
@@ -275,7 +275,7 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
                         String translatedText = "";
                         for (Map.Entry<String, String> pair : speechRecognitionResultEventArgs.getResult().getTranslations().entrySet()) {
                             System.out.printf("Translated into '%s': %s\n", pair.getKey(), pair.getValue());
-                            if(toLanguage.contains(pair.getKey())){
+                            if(toLanguage.equals(pair.getKey())){
                                 translatedText = pair.getValue();
                             }
                         }
@@ -293,7 +293,7 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
                         String translatedText = "";
                         for (Map.Entry<String, String> pair : speechRecognitionResultEventArgs.getResult().getTranslations().entrySet()) {
                             System.out.printf("Translated into '%s': %s\n", pair.getKey(), pair.getValue());
-                            if(toLanguage.contains(pair.getKey())){
+                            if(toLanguage.equals(pair.getKey())){
                                 translatedText = pair.getValue();
                             }
                         }

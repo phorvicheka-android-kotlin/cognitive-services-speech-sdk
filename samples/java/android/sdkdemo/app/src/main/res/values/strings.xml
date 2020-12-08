@@ -1,6 +1,7 @@
 <resources>
     <!--<string name="app_name">SpeechSDKQuickstart</string>-->
     <string name="app_name">SpeechSdkDemo</string>
+    <!--<string name="app_name">SpeechTranslator</string>-->
     <string name="speechTranslation">Speech Translation</string>
     <string name="speechButtonText">Recognize Speech</string>
 
@@ -12,8 +13,8 @@
     </string-array>
 
     <string-array name="translateLangLocaleMap">
-        <item>Korean -> English|ko-KR|en-US</item>
-        <item>English -> Korean|en-US|ko-KR</item>
+        <item>Korean -> English|ko-KR|en</item>
+        <item>English -> Korean|en-US|ko</item>
     </string-array>
 
 </resources>

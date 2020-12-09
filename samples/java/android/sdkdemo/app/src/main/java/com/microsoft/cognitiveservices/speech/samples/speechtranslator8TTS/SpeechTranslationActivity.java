@@ -1,6 +1,7 @@
-package com.microsoft.cognitiveservices.speech.samples.speechtranslator;
+package com.microsoft.cognitiveservices.speech.samples.speechtranslator8TTS;
 
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
@@ -13,14 +14,23 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.microsoft.cognitiveservices.speech.AudioDataStream;
 import com.microsoft.cognitiveservices.speech.CancellationDetails;
 import com.microsoft.cognitiveservices.speech.ResultReason;
+import com.microsoft.cognitiveservices.speech.SpeechConfig;
+import com.microsoft.cognitiveservices.speech.SpeechSynthesisCancellationDetails;
+import com.microsoft.cognitiveservices.speech.SpeechSynthesisOutputFormat;
+import com.microsoft.cognitiveservices.speech.SpeechSynthesisResult;
+import com.microsoft.cognitiveservices.speech.SpeechSynthesizer;
 import com.microsoft.cognitiveservices.speech.audio.AudioConfig;
 import com.microsoft.cognitiveservices.speech.translation.SpeechTranslationConfig;
 import com.microsoft.cognitiveservices.speech.translation.TranslationRecognitionResult;
 import com.microsoft.cognitiveservices.speech.translation.TranslationRecognizer;
 
+import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -30,6 +40,7 @@ import java.util.concurrent.Future;
 import static android.Manifest.permission.INTERNET;
 import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 import static android.Manifest.permission.RECORD_AUDIO;
+import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 public class SpeechTranslationActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
@@ -46,6 +57,7 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
     private String fromLanguage;
     private String toLanguage;
     private SpeechTranslationConfig translationConfig;
+    private SpeechConfig speechConfig;
 
     private TextView recognizedTextView;
     private TextView translatedTextView;
@@ -55,6 +67,7 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
     private Button recognizeContinuousButton;
 
     private MicrophoneStream microphoneStream;
+    private Map<String, String> languageToVoiceMap;
 
 
     private MicrophoneStream createMicrophoneStream() {
@@ -88,7 +101,7 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
             int permissionRequestId = 5;
 
             // Request permissions needed for speech recognition
-            ActivityCompat.requestPermissions(SpeechTranslationActivity.this, new String[]{RECORD_AUDIO, INTERNET, READ_EXTERNAL_STORAGE}, permissionRequestId);
+            ActivityCompat.requestPermissions(SpeechTranslationActivity.this, new String[]{RECORD_AUDIO, INTERNET, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE}, permissionRequestId);
         } catch (Exception ex) {
             Log.e("SpeechSDK", "could not init sdk, " + ex.toString());
             recognizedTextView.setText("Could not initialize: " + ex.toString());
@@ -102,6 +115,7 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
             Log.i(this.getClass().getName(), "SPEECH__SUBSCRIPTION__KEY: " + BuildConfig.SPEECH__SUBSCRIPTION__KEY);
             Log.i(this.getClass().getName(), "SPEECH__SERVICE__REGION: " + BuildConfig.SPEECH__SERVICE__REGION);
             translationConfig = SpeechTranslationConfig.fromSubscription(SpeechSubscriptionKey, SpeechRegion);
+            speechConfig = SpeechConfig.fromSubscription(SpeechSubscriptionKey, SpeechRegion);
 
             // https://stackoverflow.com/questions/3013655/creating-hashmap-map-from-xml-resources
             String[] stringArray = getResources().getStringArray(R.array.translateLangLocaleMap);
@@ -118,12 +132,18 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             spin.setAdapter(adapter);
             spin.setOnItemSelectedListener(this);
+
+            // See: https://aka.ms/speech/sdkregion#standard-and-neural-voices
+            // https://docs.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support#neural-voices-in-preview
+            languageToVoiceMap = new HashMap<String, String>();
+            languageToVoiceMap.put("ko", "ko-KR-HeamiRUS");
+            languageToVoiceMap.put("en", "en-US-BenjaminRUS");
+
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
             displayException(ex);
             return;
         }
-
 
 
         ///////////////////////////////////////////////////
@@ -146,9 +166,49 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
                     String s = result.getText();
                     String translatedText = "";
                     for (Map.Entry<String, String> pair : result.getTranslations().entrySet()) {
-                        System.out.printf("Translated into '%s': %s\n", pair.getKey(), pair.getValue());
-                        if(toLanguage.equals(pair.getKey())){
-                            translatedText = pair.getValue();
+                        String language = pair.getKey();
+                        String translation = pair.getValue();
+                        System.out.printf("Translated into '%s': %s\n", language, translation);
+                        if (toLanguage.equals(language)) {
+                            translatedText = translation;
+
+                            speechConfig.setSpeechSynthesisVoiceName(languageToVoiceMap.get(toLanguage));
+                            //AudioConfig audioConfig = AudioConfig.fromWavFileOutput(language + "-translation.wav");
+                            // set the output format
+                            speechConfig.setSpeechSynthesisOutputFormat(SpeechSynthesisOutputFormat.Riff24Khz16BitMonoPcm);
+                            SpeechSynthesizer synthesizer = new SpeechSynthesizer(speechConfig);
+                            SpeechSynthesisResult ssResult = synthesizer.SpeakText(translatedText);
+
+                            // save
+                            AudioDataStream stream = AudioDataStream.fromResult(ssResult);
+                            System.out.printf("Steam status: " + stream.getStatus());
+                            // Create folder to store recordingss
+                            File myDirectory = new File(Environment.getExternalStorageDirectory(), "KK-sdkDemoSpeechTranslator");
+                            if (!myDirectory.exists()) {
+                                myDirectory.mkdirs();
+                            }
+                            SimpleDateFormat dateFormat = new SimpleDateFormat("mmddyyyyhhmmss");
+                            String date = dateFormat.format(new Date());
+                            String audioFile = language + "-translation-" + date + ".wav";
+                            String filePath = myDirectory.getAbsolutePath() + File.separator + audioFile;
+                            stream.saveToWavFile(filePath);
+                            String text = "";
+                            if (ssResult.getReason() == ResultReason.SynthesizingAudioCompleted) {
+                                text = "Speech synthesis succeeded.";
+                            } else if (ssResult.getReason() == ResultReason.Canceled) {
+                                String cancellationDetails =
+                                        SpeechSynthesisCancellationDetails.fromResult(ssResult).toString();
+                                text = "Error synthesizing. Error detail: " +
+                                        System.lineSeparator() + cancellationDetails +
+                                        System.lineSeparator() + "Did you update the subscription info?";
+                            }
+                            String finalText = text;
+                            SpeechTranslationActivity.this.runOnUiThread(() -> {
+                                Toast.makeText(getApplicationContext(), finalText, Toast.LENGTH_SHORT).show();
+                            });
+
+                            synthesizer.close();
+                            ssResult.close();
                         }
                     }
                     if (result.getReason() != ResultReason.TranslatedSpeech) {
@@ -165,6 +225,7 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
             } catch (Exception ex) {
                 System.out.println(ex.getMessage());
                 displayException(ex);
+                enableButtons();
             }
         });
 
@@ -190,7 +251,7 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
                     String translatedText = "";
                     for (Map.Entry<String, String> pair : speechRecognitionResultEventArgs.getResult().getTranslations().entrySet()) {
                         System.out.printf("Translated into '%s': %s\n", pair.getKey(), pair.getValue());
-                        if(toLanguage.equals(pair.getKey())){
+                        if (toLanguage.equals(pair.getKey())) {
                             translatedText = pair.getValue();
                         }
                     }
@@ -207,7 +268,7 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
                     String translatedText = "";
                     for (Map.Entry<String, String> pair : result.getTranslations().entrySet()) {
                         System.out.printf("Translated into '%s': %s\n", pair.getKey(), pair.getValue());
-                        if(toLanguage.equals(pair.getKey())){
+                        if (toLanguage.equals(pair.getKey())) {
                             translatedText = pair.getValue();
                         }
                     }
@@ -275,7 +336,7 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
                         String translatedText = "";
                         for (Map.Entry<String, String> pair : speechRecognitionResultEventArgs.getResult().getTranslations().entrySet()) {
                             System.out.printf("Translated into '%s': %s\n", pair.getKey(), pair.getValue());
-                            if(toLanguage.equals(pair.getKey())){
+                            if (toLanguage.equals(pair.getKey())) {
                                 translatedText = pair.getValue();
                             }
                         }
@@ -293,7 +354,7 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
                         String translatedText = "";
                         for (Map.Entry<String, String> pair : speechRecognitionResultEventArgs.getResult().getTranslations().entrySet()) {
                             System.out.printf("Translated into '%s': %s\n", pair.getKey(), pair.getValue());
-                            if(toLanguage.equals(pair.getKey())){
+                            if (toLanguage.equals(pair.getKey())) {
                                 translatedText = pair.getValue();
                             }
                         }
@@ -429,7 +490,7 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
         // https://stackoverflow.com/questions/35449800/best-practice-to-implement-key-value-pair-in-android-spinner/35450251
         String language = supportedTranslators.get(position);
         TranslateLocale translateLocale = languageLocaleMap.get(language);
-        Toast.makeText(getApplicationContext(), "Selected Language: "+ language,Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(), "Selected Language: " + language, Toast.LENGTH_SHORT).show();
         this.fromLanguage = translateLocale.getFromLanguage();
         this.toLanguage = translateLocale.getToLanguage();
     }

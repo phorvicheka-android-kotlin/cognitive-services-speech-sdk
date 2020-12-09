@@ -6,7 +6,7 @@ android {
 
     compileSdkVersion 27
     defaultConfig {
-        applicationId "com.microsoft.cognitiveservices.speech.samples.sdkdemo.speechtranslator"
+        applicationId "com.microsoft.cognitiveservices.speech.samples.sdkdemo.speechtranslator8TTS"
         minSdkVersion 23
         targetSdkVersion 27
         versionCode 1

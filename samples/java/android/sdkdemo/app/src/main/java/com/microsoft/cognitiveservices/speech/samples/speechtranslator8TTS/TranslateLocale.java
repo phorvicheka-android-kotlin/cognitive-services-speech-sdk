@@ -1,4 +1,4 @@
-package com.microsoft.cognitiveservices.speech.samples.speechtranslator;
+package com.microsoft.cognitiveservices.speech.samples.speechtranslator8TTS;
 
 public class TranslateLocale {
     private String fromLanguage;

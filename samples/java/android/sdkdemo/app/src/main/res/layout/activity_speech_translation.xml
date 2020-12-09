@@ -12,8 +12,8 @@
         android:id="@+id/txtVw"
         android:layout_width="0dp"
         android:layout_height="18dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="32dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
         android:text="Select translator:"
         android:textSize="14sp"
         android:textStyle="bold"
@@ -22,73 +22,79 @@
 
     <Spinner
         android:id="@+id/spinnerSelectLanguage"
-        android:layout_width="0dp"
+        android:layout_width="278dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
         app:layout_constraintBottom_toBottomOf="@+id/txtVw"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/txtVw"
         app:layout_constraintTop_toTopOf="@+id/txtVw" />
 
-    <Button
-        android:id="@+id/buttonRecognize"
-        android:layout_width="340dp"
-        android:layout_height="48dp"
-        android:layout_marginTop="32dp"
-        android:text="Recognize"
-        android:textAllCaps="false"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/spinnerSelectLanguage" />
 
     <Button
         android:id="@+id/buttonRecognizeIntermediate"
-        android:layout_width="340dp"
+        android:layout_width="130dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="29dp"
+        android:layout_marginStart="11dp"
         android:text="Recognize with intermediate results"
         android:textAllCaps="false"
-        app:layout_constraintEnd_toEndOf="@+id/buttonRecognize"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="@+id/buttonRecognize"
-        app:layout_constraintTop_toBottomOf="@+id/buttonRecognize" />
+        app:layout_constraintBottom_toBottomOf="@+id/buttonRecognize"
+        app:layout_constraintEnd_toStartOf="@+id/buttonRecognizeContinuous"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/buttonRecognize"
+        app:layout_constraintTop_toTopOf="@+id/buttonRecognize"
+        app:layout_constraintVertical_bias="0.521" />
 
+    <Button
+        android:id="@+id/buttonRecognize"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="32dp"
+        android:text="Recognize"
+        android:textAllCaps="false"
+        app:layout_constraintEnd_toStartOf="@+id/buttonRecognizeIntermediate"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/txtVw" />
 
     <Button
         android:id="@+id/buttonRecognizeContinuous"
-        android:layout_width="340dp"
+        android:layout_width="120dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="28dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="8dp"
         android:text="Recognize continuously"
         android:textAllCaps="false"
-        app:layout_constraintEnd_toEndOf="@+id/buttonRecognizeIntermediate"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="@+id/buttonRecognizeIntermediate"
-        app:layout_constraintTop_toBottomOf="@+id/buttonRecognizeIntermediate" />
+        app:layout_constraintBottom_toBottomOf="@+id/buttonRecognizeIntermediate"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/buttonRecognizeIntermediate"
+        app:layout_constraintTop_toTopOf="@+id/buttonRecognizeIntermediate" />
 
     <ScrollView
         android:layout_width="405dp"
-        android:layout_height="407dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="26dp"
-        android:layout_marginEnd="16dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="8dp"
+        android:padding="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/buttonRecognizeContinuous">
+        app:layout_constraintTop_toBottomOf="@+id/buttonRecognizeIntermediate">
 
         <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="8dp">
 
             <TextView
                 android:id="@+id/txtVwRecognizeTextLabel"
                 android:layout_width="0dp"
                 android:layout_height="18dp"
-                android:layout_marginStart="32dp"
+                android:layout_marginStart="16dp"
                 android:layout_marginTop="16dp"
+                android:labelFor="@id/recognizedText"
                 android:text="Recognized Text:"
                 android:textSize="14sp"
                 android:textStyle="bold"
@@ -96,13 +102,45 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <EditText
-                android:id="@+id/translatedText"
-                android:background="@android:color/transparent"
+                android:id="@+id/recognizedText"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="32dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:background="@android:color/transparent"
+                android:importantForAutofill="no"
+                android:inputType="textMultiLine"
+                android:minHeight="50dp"
+                android:scrollbarAlwaysDrawHorizontalTrack="false"
+                android:scrollbars="vertical"
+                android:textAppearance="@style/TextAppearance.AppCompat.Title"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/txtVwRecognizeTextLabel" />
+
+            <TextView
+                android:id="@+id/txtVwTranslatedTextLabel"
+                android:layout_width="0dp"
+                android:layout_height="18dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="24dp"
+                android:labelFor="@id/translatedText"
+                android:text="Translated Text:"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/recognizedText" />
+
+            <EditText
+                android:id="@+id/translatedText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
                 android:layout_marginEnd="16dp"
                 android:layout_marginBottom="16dp"
+                android:background="@android:color/transparent"
+                android:importantForAutofill="no"
+                android:inputType="textMultiLine"
                 android:minHeight="50dp"
                 android:scrollbarAlwaysDrawHorizontalTrack="false"
                 android:scrollbars="vertical"
@@ -112,32 +150,6 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/txtVwTranslatedTextLabel" />
 
-            <TextView
-                android:id="@+id/txtVwTranslatedTextLabel"
-                android:layout_width="0dp"
-                android:layout_height="18dp"
-                android:layout_marginStart="32dp"
-                android:layout_marginTop="24dp"
-                android:text="Translated Text:"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/recognizedText" />
-
-            <EditText
-                android:id="@+id/recognizedText"
-                android:background="@android:color/transparent"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="32dp"
-                android:layout_marginEnd="16dp"
-                android:minHeight="50dp"
-                android:scrollbarAlwaysDrawHorizontalTrack="false"
-                android:scrollbars="vertical"
-                android:textAppearance="@style/TextAppearance.AppCompat.Title"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/txtVwRecognizeTextLabel" />
         </android.support.constraint.ConstraintLayout>
     </ScrollView>
 

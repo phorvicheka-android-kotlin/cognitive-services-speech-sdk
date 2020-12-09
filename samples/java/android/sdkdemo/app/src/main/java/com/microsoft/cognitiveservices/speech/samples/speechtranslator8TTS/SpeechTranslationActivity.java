@@ -10,6 +10,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -98,6 +99,7 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
         Log.i(this.getClass().getName(), ">>>>>>>>> onCreate");
         setContentView(R.layout.activity_speech_translation);
         setTitle(R.string.speechTranslation);
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
 
         recognizedTextView = findViewById(R.id.recognizedText);
         translatedTextView = findViewById(R.id.translatedText);

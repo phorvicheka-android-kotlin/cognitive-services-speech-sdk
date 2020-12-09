@@ -515,12 +515,17 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
         super.onDestroy();
         Log.i(this.getClass().getName(), ">>>>>>>>> onDestroy");
         // STT
-        translationConfig.close();
-        translationRecognizer.close();
+        if (translationConfig != null)
+            translationConfig.close();
+        if (translationRecognizer != null)
+            translationRecognizer.close();
         // TTS
-        speechConfig.close();
-        speechSynthesizer.close();
-        speechSynthesisResult.close();
+        if (speechConfig != null)
+            speechConfig.close();
+        if (speechSynthesizer != null)
+            speechSynthesizer.close();
+        if (speechSynthesisResult != null)
+            speechSynthesisResult.close();
     }
 
 

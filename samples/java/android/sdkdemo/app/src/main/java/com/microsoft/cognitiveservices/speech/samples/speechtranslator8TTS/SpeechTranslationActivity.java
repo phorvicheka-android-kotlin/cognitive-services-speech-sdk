@@ -15,9 +15,9 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.microsoft.cognitiveservices.speech.AudioDataStream;
@@ -77,10 +77,13 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
 
     private EditText recognizedTextView;
     private EditText translatedTextView;
+    private boolean isSaveToFile;
+    private boolean isSpeakTranslatedText;
 
     private Button recognizeButton;
     private Button recognizeIntermediateButton;
     private Button recognizeContinuousButton;
+
 
 
     private MicrophoneStream createMicrophoneStream() {
@@ -346,12 +349,17 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
 
     private void processTTS(String translatedText) {
         try {
+            SpeechSynthesisResult ssResult = null;
             // speak text
-            SpeechSynthesisResult ssResult = speakText(translatedText);
+            if(isSpeakTranslatedText){
+                ssResult = speakText(translatedText);
+                // show toast whether succeeded or failed
+                toastResultOfTTS(ssResult);
+            }
             // save
-            saveToWavFile(ssResult);
-            // show toast whether succeeded or failed
-            toastResultOfTTS(ssResult);
+            if(isSaveToFile){
+                saveToWavFile(ssResult);
+            }
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
             displayException(ex);
@@ -547,9 +555,24 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
                     InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
                 }
+
             }
         }
         return super.dispatchTouchEvent( event );
+    }
+
+    public void onCheckboxClicked(View view) {
+        // Is the view now checked?
+        boolean checked = ((CheckBox) view).isChecked();
+        // Check which checkbox was clicked
+        switch(view.getId()) {
+            case R.id.cbSaveToFile:
+                isSaveToFile = checked;
+                break;
+            case R.id.cbSpeakTranslatedText:
+                isSpeakTranslatedText = checked;
+                break;
+        }
     }
 
 }

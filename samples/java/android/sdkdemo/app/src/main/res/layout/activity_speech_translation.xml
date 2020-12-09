@@ -48,13 +48,13 @@
         android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="24dp"
         android:text="Recognize"
         android:textAllCaps="false"
         app:layout_constraintEnd_toStartOf="@+id/buttonRecognizeIntermediate"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/txtVw" />
+        app:layout_constraintTop_toBottomOf="@+id/cbSpeakTranslatedText" />
 
     <Button
         android:id="@+id/buttonRecognizeContinuous"
@@ -152,5 +152,29 @@
 
         </android.support.constraint.ConstraintLayout>
     </ScrollView>
+
+    <CheckBox
+        android:id="@+id/cbSpeakTranslatedText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:checked="false"
+        android:text="Speak translated text"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/txtVw"
+        android:onClick="onCheckboxClicked" />
+
+    <CheckBox
+        android:id="@+id/cbSaveToFile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:checked="false"
+        android:text="Save to file"
+        app:layout_constraintStart_toEndOf="@+id/cbSpeakTranslatedText"
+        app:layout_constraintTop_toBottomOf="@+id/txtVw"
+        android:onClick="onCheckboxClicked"/>
 
 </android.support.constraint.ConstraintLayout>

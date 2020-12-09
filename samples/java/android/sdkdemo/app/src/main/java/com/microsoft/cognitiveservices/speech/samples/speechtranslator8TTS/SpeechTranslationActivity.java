@@ -56,8 +56,18 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
     private HashMap<String, TranslateLocale> languageLocaleMap = new HashMap<>();
     private String fromLanguage;
     private String toLanguage;
+
+    // STT
+    private TranslationRecognizer translationRecognizer;
     private SpeechTranslationConfig translationConfig;
+    private final AudioConfig audioConfig = AudioConfig.fromStreamInput(createMicrophoneStream());
+    private MicrophoneStream microphoneStream;
+    // TTS
+    private SpeechSynthesizer speechSynthesizer;
     private SpeechConfig speechConfig;
+    private SpeechSynthesisResult speechSynthesisResult;
+    private final File myDirectory = new File(Environment.getExternalStorageDirectory(), "KK-sdkDemoSpeechTranslator");
+    private Map<String, String> languageToVoiceMap;
 
     private TextView recognizedTextView;
     private TextView translatedTextView;
@@ -65,9 +75,6 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
     private Button recognizeButton;
     private Button recognizeIntermediateButton;
     private Button recognizeContinuousButton;
-
-    private MicrophoneStream microphoneStream;
-    private Map<String, String> languageToVoiceMap;
 
 
     private MicrophoneStream createMicrophoneStream() {
@@ -156,71 +163,28 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
             clearTextBox();
 
             try {
-                final AudioConfig audioInput = AudioConfig.fromStreamInput(createMicrophoneStream());
                 translationConfig.setSpeechRecognitionLanguage(fromLanguage);
+                translationRecognizer = new TranslationRecognizer(translationConfig, audioConfig);
 
-                final TranslationRecognizer reco = new TranslationRecognizer(translationConfig, audioInput);
-
-                final Future<TranslationRecognitionResult> task = reco.recognizeOnceAsync();
+                final Future<TranslationRecognitionResult> task = translationRecognizer.recognizeOnceAsync();
                 setOnTaskCompletedListener(task, result -> {
                     String s = result.getText();
-                    String translatedText = "";
-                    for (Map.Entry<String, String> pair : result.getTranslations().entrySet()) {
-                        String language = pair.getKey();
-                        String translation = pair.getValue();
-                        System.out.printf("Translated into '%s': %s\n", language, translation);
-                        if (toLanguage.equals(language)) {
-                            translatedText = translation;
-
-                            speechConfig.setSpeechSynthesisVoiceName(languageToVoiceMap.get(toLanguage));
-                            //AudioConfig audioConfig = AudioConfig.fromWavFileOutput(language + "-translation.wav");
-                            // set the output format
-                            speechConfig.setSpeechSynthesisOutputFormat(SpeechSynthesisOutputFormat.Riff24Khz16BitMonoPcm);
-                            SpeechSynthesizer synthesizer = new SpeechSynthesizer(speechConfig);
-                            SpeechSynthesisResult ssResult = synthesizer.SpeakText(translatedText);
-
-                            // save
-                            AudioDataStream stream = AudioDataStream.fromResult(ssResult);
-                            System.out.printf("Steam status: " + stream.getStatus());
-                            // Create folder to store recordingss
-                            File myDirectory = new File(Environment.getExternalStorageDirectory(), "KK-sdkDemoSpeechTranslator");
-                            if (!myDirectory.exists()) {
-                                myDirectory.mkdirs();
-                            }
-                            SimpleDateFormat dateFormat = new SimpleDateFormat("mmddyyyyhhmmss");
-                            String date = dateFormat.format(new Date());
-                            String audioFile = language + "-translation-" + date + ".wav";
-                            String filePath = myDirectory.getAbsolutePath() + File.separator + audioFile;
-                            stream.saveToWavFile(filePath);
-                            String text = "";
-                            if (ssResult.getReason() == ResultReason.SynthesizingAudioCompleted) {
-                                text = "Speech synthesis succeeded.";
-                            } else if (ssResult.getReason() == ResultReason.Canceled) {
-                                String cancellationDetails =
-                                        SpeechSynthesisCancellationDetails.fromResult(ssResult).toString();
-                                text = "Error synthesizing. Error detail: " +
-                                        System.lineSeparator() + cancellationDetails +
-                                        System.lineSeparator() + "Did you update the subscription info?";
-                            }
-                            String finalText = text;
-                            SpeechTranslationActivity.this.runOnUiThread(() -> {
-                                Toast.makeText(getApplicationContext(), finalText, Toast.LENGTH_SHORT).show();
-                            });
-
-                            synthesizer.close();
-                            ssResult.close();
-                        }
-                    }
+                    String translatedText = getTranslatedTextFromSTTResult(result);
                     if (result.getReason() != ResultReason.TranslatedSpeech) {
                         String errorDetails = (result.getReason() == ResultReason.Canceled) ? CancellationDetails.fromResult(result).getErrorDetails() : "";
                         s = "Recognition failed with " + result.getReason() + ". Did you enter your subscription?" + System.lineSeparator() + errorDetails;
                     }
 
-                    reco.close();
+
                     Log.i(logTag, "Recognizer returned: " + s);
                     setRecognizedText(s);
                     setTranslatedText(translatedText);
                     enableButtons();
+                    // process text to speech of translatedText
+                    processTTS(translatedText);
+
+                    translationRecognizer.close();
+                    translationRecognizer = null;
                 });
             } catch (Exception ex) {
                 System.out.println(ex.getMessage());
@@ -239,42 +203,33 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
             clearTextBox();
 
             try {
-                final AudioConfig audioInput = AudioConfig.fromStreamInput(createMicrophoneStream());
                 translationConfig.setSpeechRecognitionLanguage(fromLanguage);
-                final TranslationRecognizer reco = new TranslationRecognizer(translationConfig, audioInput);
+                translationRecognizer = new TranslationRecognizer(translationConfig, audioConfig);
 
-                reco.recognizing.addEventListener((o, speechRecognitionResultEventArgs) -> {
+                translationRecognizer.recognizing.addEventListener((o, speechRecognitionResultEventArgs) -> {
                     final String s = speechRecognitionResultEventArgs.getResult().getText();
                     Log.i(logTag, "Intermediate result received: " + s);
                     setRecognizedText(s);
 
-                    String translatedText = "";
-                    for (Map.Entry<String, String> pair : speechRecognitionResultEventArgs.getResult().getTranslations().entrySet()) {
-                        System.out.printf("Translated into '%s': %s\n", pair.getKey(), pair.getValue());
-                        if (toLanguage.equals(pair.getKey())) {
-                            translatedText = pair.getValue();
-                        }
-                    }
+                    String translatedText = getTranslatedTextFromSTTResult(speechRecognitionResultEventArgs.getResult());
                     setTranslatedText(translatedText);
                 });
 
-                final Future<TranslationRecognitionResult> task = reco.recognizeOnceAsync();
+                final Future<TranslationRecognitionResult> task = translationRecognizer.recognizeOnceAsync();
                 setOnTaskCompletedListener(task, result -> {
                     final String s = result.getText();
-                    reco.close();
                     Log.i(logTag, "Recognizer returned: " + s);
                     setRecognizedText(s);
 
-                    String translatedText = "";
-                    for (Map.Entry<String, String> pair : result.getTranslations().entrySet()) {
-                        System.out.printf("Translated into '%s': %s\n", pair.getKey(), pair.getValue());
-                        if (toLanguage.equals(pair.getKey())) {
-                            translatedText = pair.getValue();
-                        }
-                    }
+                    String translatedText = getTranslatedTextFromSTTResult(result);
                     setTranslatedText(translatedText);
-
                     enableButtons();
+
+                    // process text to speech of translatedText
+                    processTTS(translatedText);
+
+                    translationRecognizer.close();
+                    translationRecognizer = null;
                 });
             } catch (Exception ex) {
                 System.out.println(ex.getMessage());
@@ -288,11 +243,10 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
         recognizeContinuousButton.setOnClickListener(new View.OnClickListener() {
             private static final String logTag = "reco 3";
             private boolean continuousListeningStarted = false;
-            private TranslationRecognizer reco = null;
-            private AudioConfig audioInput = null;
             private String buttonText = "";
             private ArrayList<String> content = new ArrayList<>();
             private ArrayList<String> contentForTranslatedText = new ArrayList<>();
+            private TranslationRecognizer reco = null;
 
             @Override
             public void onClick(final View view) {
@@ -322,9 +276,8 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
                     content.clear();
                     contentForTranslatedText.clear();
 
-                    audioInput = AudioConfig.fromStreamInput(createMicrophoneStream());
                     translationConfig.setSpeechRecognitionLanguage(fromLanguage);
-                    reco = new TranslationRecognizer(translationConfig, audioInput);
+                    reco = new TranslationRecognizer(translationConfig, audioConfig);
 
                     reco.recognizing.addEventListener((o, speechRecognitionResultEventArgs) -> {
                         final String s = speechRecognitionResultEventArgs.getResult().getText();
@@ -333,13 +286,7 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
                         setRecognizedText(TextUtils.join(" ", content));
                         content.remove(content.size() - 1);
 
-                        String translatedText = "";
-                        for (Map.Entry<String, String> pair : speechRecognitionResultEventArgs.getResult().getTranslations().entrySet()) {
-                            System.out.printf("Translated into '%s': %s\n", pair.getKey(), pair.getValue());
-                            if (toLanguage.equals(pair.getKey())) {
-                                translatedText = pair.getValue();
-                            }
-                        }
+                        String translatedText = getTranslatedTextFromSTTResult(speechRecognitionResultEventArgs.getResult());
                         contentForTranslatedText.add(translatedText);
                         setTranslatedText(TextUtils.join(" ", contentForTranslatedText));
                         contentForTranslatedText.remove(contentForTranslatedText.size() - 1);
@@ -351,15 +298,12 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
                         content.add(s);
                         setRecognizedText(TextUtils.join(" ", content));
 
-                        String translatedText = "";
-                        for (Map.Entry<String, String> pair : speechRecognitionResultEventArgs.getResult().getTranslations().entrySet()) {
-                            System.out.printf("Translated into '%s': %s\n", pair.getKey(), pair.getValue());
-                            if (toLanguage.equals(pair.getKey())) {
-                                translatedText = pair.getValue();
-                            }
-                        }
+                        String translatedText = getTranslatedTextFromSTTResult(speechRecognitionResultEventArgs.getResult());
                         contentForTranslatedText.add(translatedText);
                         setTranslatedText(TextUtils.join(" ", contentForTranslatedText));
+
+                        // process text to speech of translatedText
+                        processTTS(translatedText);
                     });
 
                     final Future<Void> task = reco.startContinuousRecognitionAsync();
@@ -377,6 +321,80 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
                 }
             }
         });
+    }
+
+    private String getTranslatedTextFromSTTResult(TranslationRecognitionResult result) {
+        String translatedText = "";
+        for (Map.Entry<String, String> pair : result.getTranslations().entrySet()) {
+            String language = pair.getKey();
+            String translation = pair.getValue();
+            System.out.printf("Translated into '%s': %s\n", language, translation);
+            if (toLanguage.equals(language)) {
+                translatedText = translation;
+                break;
+            }
+        }
+        return translatedText;
+    }
+
+    private void processTTS(String translatedText) {
+        try {
+            // speak text
+            SpeechSynthesisResult ssResult = speakText(translatedText);
+            // save
+            saveToWavFile(ssResult);
+            // show toast whether succeeded or failed
+            toastResultOfTTS(ssResult);
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+            displayException(ex);
+        } finally {
+            speechSynthesizer.close();
+            speechSynthesizer = null;
+            speechSynthesisResult.close();
+            speechSynthesisResult = null;
+        }
+    }
+
+    private void toastResultOfTTS(SpeechSynthesisResult ssResult) {
+        String text = "";
+        if (ssResult.getReason() == ResultReason.SynthesizingAudioCompleted) {
+            text = "Speech synthesis succeeded.";
+        } else if (ssResult.getReason() == ResultReason.Canceled) {
+            String cancellationDetails =
+                    SpeechSynthesisCancellationDetails.fromResult(ssResult).toString();
+            text = "Error synthesizing. Error detail: " +
+                    System.lineSeparator() + cancellationDetails +
+                    System.lineSeparator() + "Did you update the subscription info?";
+        }
+        String finalText = text;
+        SpeechTranslationActivity.this.runOnUiThread(() -> {
+            Toast.makeText(getApplicationContext(), finalText, Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void saveToWavFile(SpeechSynthesisResult ssResult) {
+        AudioDataStream stream = AudioDataStream.fromResult(ssResult);
+        System.out.printf("Steam status: " + stream.getStatus());
+        // Create folder to store recordingss
+        if (!myDirectory.exists()) {
+            myDirectory.mkdirs();
+        }
+        SimpleDateFormat dateFormat = new SimpleDateFormat("mmddyyyyhhmmss");
+        String date = dateFormat.format(new Date());
+        String audioFile = toLanguage + "-translation-" + date + ".wav";
+        String filePath = myDirectory.getAbsolutePath() + File.separator + audioFile;
+        stream.saveToWavFile(filePath);
+    }
+
+    private SpeechSynthesisResult speakText(String translatedText) {
+        speechConfig.setSpeechSynthesisVoiceName(languageToVoiceMap.get(toLanguage));
+        //AudioConfig audioConfig = AudioConfig.fromWavFileOutput(language + "-translation.wav");
+        // set the output format
+        speechConfig.setSpeechSynthesisOutputFormat(SpeechSynthesisOutputFormat.Riff24Khz16BitMonoPcm);
+        speechSynthesizer = new SpeechSynthesizer(speechConfig);
+        speechSynthesisResult = speechSynthesizer.SpeakText(translatedText);
+        return speechSynthesisResult;
     }
 
     private void displayException(Exception ex) {
@@ -481,7 +499,13 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
     protected void onDestroy() {
         super.onDestroy();
         Log.i(this.getClass().getName(), ">>>>>>>>> onDestroy");
-        this.translationConfig.close();
+        // STT
+        translationConfig.close();
+        translationRecognizer.close();
+        // TTS
+        speechConfig.close();
+        speechSynthesizer.close();
+        speechSynthesisResult.close();
     }
 
 

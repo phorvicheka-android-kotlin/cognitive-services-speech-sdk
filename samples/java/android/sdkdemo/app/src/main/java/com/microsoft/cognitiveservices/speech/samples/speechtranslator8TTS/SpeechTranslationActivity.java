@@ -133,7 +133,6 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
             Log.i(this.getClass().getName(), "SPEECH__SERVICE__REGION: " + BuildConfig.SPEECH__SERVICE__REGION);
             translationConfig = SpeechTranslationConfig.fromSubscription(SpeechSubscriptionKey, SpeechRegion);
             speechConfig = SpeechConfig.fromSubscription(SpeechSubscriptionKey, SpeechRegion);
-            audioConfig =  AudioConfig.fromStreamInput(createMicrophoneStream());
 
             // https://stackoverflow.com/questions/3013655/creating-hashmap-map-from-xml-resources
             String[] stringArray = getResources().getStringArray(R.array.translateLangLocaleMap);
@@ -175,6 +174,7 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
 
             try {
                 translationConfig.setSpeechRecognitionLanguage(fromLanguage);
+                audioConfig =  AudioConfig.fromStreamInput(createMicrophoneStream());
                 translationRecognizer = new TranslationRecognizer(translationConfig, audioConfig);
 
                 final Future<TranslationRecognitionResult> task = translationRecognizer.recognizeOnceAsync();
@@ -196,6 +196,8 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
 
                     translationRecognizer.close();
                     translationRecognizer = null;
+                    audioConfig.close();
+                    audioConfig = null;
                 });
             } catch (Exception ex) {
                 System.out.println(ex.getMessage());
@@ -215,6 +217,7 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
 
             try {
                 translationConfig.setSpeechRecognitionLanguage(fromLanguage);
+                audioConfig =  AudioConfig.fromStreamInput(createMicrophoneStream());
                 translationRecognizer = new TranslationRecognizer(translationConfig, audioConfig);
 
                 translationRecognizer.recognizing.addEventListener((o, speechRecognitionResultEventArgs) -> {
@@ -241,6 +244,8 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
 
                     translationRecognizer.close();
                     translationRecognizer = null;
+                    audioConfig.close();
+                    audioConfig = null;
                 });
             } catch (Exception ex) {
                 System.out.println(ex.getMessage());
@@ -288,6 +293,7 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
                     contentForTranslatedText.clear();
 
                     translationConfig.setSpeechRecognitionLanguage(fromLanguage);
+                    audioConfig =  AudioConfig.fromStreamInput(createMicrophoneStream());
                     reco = new TranslationRecognizer(translationConfig, audioConfig);
 
                     reco.recognizing.addEventListener((o, speechRecognitionResultEventArgs) -> {
@@ -520,6 +526,10 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
             translationConfig.close();
         if (translationRecognizer != null)
             translationRecognizer.close();
+
+        if (audioConfig != null)
+            audioConfig.close();
+
         // TTS
         if (speechConfig != null)
             speechConfig.close();

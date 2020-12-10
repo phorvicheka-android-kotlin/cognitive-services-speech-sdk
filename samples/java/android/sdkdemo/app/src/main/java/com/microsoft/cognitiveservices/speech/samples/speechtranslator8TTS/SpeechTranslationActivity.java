@@ -66,7 +66,7 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
     // STT
     private TranslationRecognizer translationRecognizer;
     private SpeechTranslationConfig translationConfig;
-    private final AudioConfig audioConfig = AudioConfig.fromStreamInput(createMicrophoneStream());
+    private AudioConfig audioConfig;
     private MicrophoneStream microphoneStream;
     // TTS
     private SpeechSynthesizer speechSynthesizer;
@@ -133,6 +133,7 @@ public class SpeechTranslationActivity extends AppCompatActivity implements Adap
             Log.i(this.getClass().getName(), "SPEECH__SERVICE__REGION: " + BuildConfig.SPEECH__SERVICE__REGION);
             translationConfig = SpeechTranslationConfig.fromSubscription(SpeechSubscriptionKey, SpeechRegion);
             speechConfig = SpeechConfig.fromSubscription(SpeechSubscriptionKey, SpeechRegion);
+            audioConfig =  AudioConfig.fromStreamInput(createMicrophoneStream());
 
             // https://stackoverflow.com/questions/3013655/creating-hashmap-map-from-xml-resources
             String[] stringArray = getResources().getStringArray(R.array.translateLangLocaleMap);
